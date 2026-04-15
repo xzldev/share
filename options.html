@@ -542,7 +542,31 @@ async function loadData() {
   errorTip.classList.remove('show');
 
   try {
-    const resp = await fetch(JSON_URL);
+    // ★ 检测运行环境：本地 file:// 协议 vs 网络部署
+    const isLocal = location.protocol === 'file:';
+
+    // ★ F12 调试输出
+    console.log(`%c[ETF期权] 运行环境检测`, 'color:#1677ff; font-weight:bold;');
+    console.log(`%c协议: ${location.protocol}  →  ${isLocal ? '🏠 本地模式（file://）普通fetch，不加缓存控制' : '🌐 网络模式（' + location.protocol + '//）强制禁缓存fetch'}`, 
+      isLocal ? 'color:#52c41a; font-weight:bold;' : 'color:#faad14; font-weight:bold;'
+    );
+
+    let resp;
+    if (isLocal) {
+      // 本地直接打开：普通 fetch，不加任何缓存控制（避免触发安全限制）
+      resp = await fetch(JSON_URL);
+    } else {
+      // 网络部署环境：双重禁缓存策略
+      const noCacheUrl = `${JSON_URL}?_t=${Date.now()}&_r=${Math.random().toString(36).slice(2)}`;
+      resp = await fetch(noCacheUrl, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
+        }
+      });
+    }
+
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     rawData = await resp.json();
 
@@ -571,6 +595,7 @@ async function loadData() {
     loadingBar.classList.remove('show');
   }
 }
+
 
 // ============================================================
 //  第一级变化：ETF 选定 → 填充行权时间
