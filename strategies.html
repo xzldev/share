@@ -228,6 +228,23 @@
       color: #bbb;
       cursor: not-allowed;
     }
+    /* 被过滤禁用的 option */
+    .form-select option:disabled {
+      color: #ccc;
+    }
+
+    /* ===== 策略约束提示 ===== */
+    .constraint-hint {
+      display: none;
+      padding: 8px 12px;
+      background: var(--warning-light);
+      border: 1px solid #ffe58f;
+      border-radius: 6px;
+      font-size: 12px;
+      color: #7c5800;
+      margin-top: 4px;
+    }
+    .constraint-hint.show { display: block; }
 
     /* ===== 策略选择按钮组 ===== */
     .strategy-grid {
@@ -450,7 +467,6 @@
     .result-info-val.is-code {
       font-family: 'Courier New', monospace;
       font-size: 14px;
-      /* ★ 强制要求：期权代码 加粗 + 标红 ★ */
       font-weight: 800 !important;
       color: #e00 !important;
     }
@@ -503,14 +519,136 @@
       margin: 20px 0;
     }
 
+    /* ===== ★ 最终选择概要模块 ===== */
+    .summary-section {
+      display: none;
+      animation: fadeInUp 0.4s ease;
+    }
+    .summary-section.show { display: block; }
+
+    .summary-card {
+      background: linear-gradient(135deg, #0f1f3d, #1a3a6e);
+      border-radius: var(--radius);
+      box-shadow: 0 8px 32px rgba(22,119,255,0.25);
+      padding: 28px 32px;
+      color: #fff;
+    }
+    .summary-card-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .summary-strategy-name {
+      font-size: 26px;
+      font-weight: 900;
+      color: #fff;
+      margin-bottom: 24px;
+      letter-spacing: -0.5px;
+    }
+    .summary-rows {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .summary-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 14px 18px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+    .summary-row-dir {
+      flex-shrink: 0;
+      width: 64px;
+      text-align: center;
+      padding: 5px 0;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+    }
+    .summary-row-dir.buy-dir {
+      background: rgba(22,119,255,0.35);
+      color: #7ec8ff;
+      border: 1px solid rgba(22,119,255,0.5);
+    }
+    .summary-row-dir.sell-dir {
+      background: rgba(250,173,20,0.25);
+      color: #ffd666;
+      border: 1px solid rgba(250,173,20,0.4);
+    }
+    .summary-row-dir.hold-dir {
+      background: rgba(82,196,26,0.25);
+      color: #95de64;
+      border: 1px solid rgba(82,196,26,0.4);
+    }
+    .summary-row-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .summary-row-code {
+      font-family: 'Courier New', monospace;
+      font-size: 20px;
+      font-weight: 900;
+      color: #fff;
+      letter-spacing: 1px;
+    }
+    .summary-row-code.is-etf {
+      color: #95de64;
+    }
+    .summary-row-detail {
+      font-size: 12px;
+      color: rgba(255,255,255,0.55);
+    }
+    .summary-row-leg-label {
+      flex-shrink: 0;
+      font-size: 11px;
+      color: rgba(255,255,255,0.4);
+      text-align: right;
+      min-width: 60px;
+    }
+    .summary-footer {
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .summary-footer-note {
+      font-size: 12px;
+      color: rgba(255,255,255,0.4);
+    }
+    .summary-footer-etf {
+      font-size: 13px;
+      color: rgba(255,255,255,0.65);
+    }
+    .summary-footer-etf strong {
+      color: #fff;
+    }
+
     /* ===== 响应式 ===== */
     @media (max-width: 640px) {
       .card { padding: 18px 14px; }
+      .summary-card { padding: 20px 16px; }
       .page-header h1 { font-size: 22px; }
       .strategy-grid { grid-template-columns: 1fr 1fr; }
       .legs-grid { grid-template-columns: 1fr; }
       .result-legs-grid { grid-template-columns: 1fr; }
       .result-info-grid { grid-template-columns: 1fr 1fr; }
+      .summary-row-code { font-size: 16px; }
     }
     @media (max-width: 400px) {
       .strategy-grid { grid-template-columns: 1fr; }
@@ -535,15 +673,12 @@
       选择基础标的 ETF
     </div>
 
-    <!-- 加载提示 -->
     <div class="loading-bar show" id="loadingBar">
       <div class="spinner"></div>
       <span>正在加载期权数据，请稍候...</span>
     </div>
-    <!-- 错误提示 -->
     <div class="error-tip" id="errorTip"></div>
 
-    <!-- 统计栏 -->
     <div class="stats-bar" id="statsBar">
       <div class="stat-item">共 <strong id="statEtf">-</strong> 个 ETF</div>
       <div class="stat-item">共 <strong id="statOption">-</strong> 个期权合约</div>
@@ -577,13 +712,8 @@
       <span id="legCardTitle">筛选期权合约腿</span>
     </div>
 
-    <!-- 策略说明 -->
     <div class="strategy-info-bar show" id="strategyInfoBar"></div>
-
-    <!-- 进度步骤（腿内部） -->
     <div class="progress-steps" id="legProgressSteps" style="margin-bottom:20px"></div>
-
-    <!-- 腿卡片区域 -->
     <div class="legs-grid" id="legsGrid"></div>
   </div>
 
@@ -602,6 +732,19 @@
     <div class="result-legs-grid" id="resultLegsGrid"></div>
   </div>
 
+  <!-- ========== STEP 6：最终选择概要 ========== -->
+  <div class="summary-section" id="summarySection">
+    <div class="summary-card">
+      <div class="summary-card-title">📋 最终选择概要</div>
+      <div class="summary-strategy-name" id="summaryStrategyName">-</div>
+      <div class="summary-rows" id="summaryRows"></div>
+      <div class="summary-footer">
+        <div class="summary-footer-etf">标的 ETF：<strong id="summaryEtfCode">-</strong></div>
+        <div class="summary-footer-note">以上代码仅供参考，请以交易所实时数据为准</div>
+      </div>
+    </div>
+  </div>
+
 </div><!-- /container -->
 
 
@@ -614,13 +757,9 @@ const JSON_URL = 'https://xzl-1300697369.cos-website.ap-shanghai.myqcloud.com/op
 
 /**
  * 策略配置表
- * legs: 每条腿的描述
- *   - label:    腿的名称（展示用）
- *   - subtitle: 副标题说明
- *   - typeHint: 预设期权类型过滤 ('C'=只显示认购, 'P'=只显示认沽, null=不限)
- *   - badgeClass: 腿标签样式
- *   - dirLabel: 方向标签文字（买/卖）
- *   - dirClass:  方向标签样式
+ * legs[].constraint: 针对该腿的约束函数，接收 (currentLegIdx, allLegResults, option) → boolean
+ *   返回 true 表示该期权可选，false 表示应被过滤禁用
+ * legs[].constraintHint: 约束提示文字（当腿一已选时显示给用户）
  */
 const STRATEGIES = [
   {
@@ -629,7 +768,12 @@ const STRATEGIES = [
     emoji: '🛡️',
     desc: '持有 ETF + 卖出认购期权，增强收益',
     legs: [
-      { label: '腿一：卖出认购', subtitle: '选择卖出的认购合约', typeHint: 'C', dirLabel: '卖出', dirClass: 'sell', badgeClass: 'call' }
+      {
+        label: '腿一：卖出认购', subtitle: '选择卖出的认购合约',
+        typeHint: 'C', dirLabel: '卖出', dirClass: 'sell', badgeClass: 'call',
+        // 备兑开仓只有一条腿，无约束
+        constraint: null, constraintHint: null
+      }
     ]
   },
   {
@@ -638,8 +782,23 @@ const STRATEGIES = [
     emoji: '📈',
     desc: '买低行权价认购 + 卖高行权价认购',
     legs: [
-      { label: '腿一：买入认购（低行权价）', subtitle: '买入较低行权价的认购合约', typeHint: 'C', dirLabel: '买入', dirClass: 'buy', badgeClass: 'call' },
-      { label: '腿二：卖出认购（高行权价）', subtitle: '卖出较高行权价的认购合约', typeHint: 'C', dirLabel: '卖出', dirClass: 'sell', badgeClass: 'call' }
+      {
+        label: '腿一：买入认购（低行权价）', subtitle: '买入较低行权价的认购合约',
+        typeHint: 'C', dirLabel: '买入', dirClass: 'buy', badgeClass: 'call',
+        constraint: null, constraintHint: null
+      },
+      {
+        label: '腿二：卖出认购（高行权价）', subtitle: '卖出行权价必须高于腿一',
+        typeHint: 'C', dirLabel: '卖出', dirClass: 'sell', badgeClass: 'call',
+        // 腿二行权价必须 > 腿一行权价，且到期日相同
+        constraint: (legResults, opt) => {
+          const leg0 = legResults[0];
+          if (!leg0) return true; // 腿一未选，暂不限制
+          return opt.exerciseDate === leg0.exerciseDate &&
+                 parseFloat(opt.strikePrice) > parseFloat(leg0.strikePrice);
+        },
+        constraintHint: '⚠️ 腿二行权价必须高于腿一，且到期日相同'
+      }
     ]
   },
   {
@@ -648,8 +807,22 @@ const STRATEGIES = [
     emoji: '📉',
     desc: '卖低行权价认购 + 买高行权价认购',
     legs: [
-      { label: '腿一：卖出认购（低行权价）', subtitle: '卖出较低行权价的认购合约', typeHint: 'C', dirLabel: '卖出', dirClass: 'sell', badgeClass: 'call' },
-      { label: '腿二：买入认购（高行权价）', subtitle: '买入较高行权价的认购合约', typeHint: 'C', dirLabel: '买入', dirClass: 'buy', badgeClass: 'call' }
+      {
+        label: '腿一：卖出认购（低行权价）', subtitle: '卖出较低行权价的认购合约',
+        typeHint: 'C', dirLabel: '卖出', dirClass: 'sell', badgeClass: 'call',
+        constraint: null, constraintHint: null
+      },
+      {
+        label: '腿二：买入认购（高行权价）', subtitle: '买入行权价必须高于腿一',
+        typeHint: 'C', dirLabel: '买入', dirClass: 'buy', badgeClass: 'call',
+        constraint: (legResults, opt) => {
+          const leg0 = legResults[0];
+          if (!leg0) return true;
+          return opt.exerciseDate === leg0.exerciseDate &&
+                 parseFloat(opt.strikePrice) > parseFloat(leg0.strikePrice);
+        },
+        constraintHint: '⚠️ 腿二行权价必须高于腿一，且到期日相同'
+      }
     ]
   },
   {
@@ -658,8 +831,22 @@ const STRATEGIES = [
     emoji: '🐂',
     desc: '卖高行权价认沽 + 买低行权价认沽',
     legs: [
-      { label: '腿一：卖出认沽（高行权价）', subtitle: '卖出较高行权价的认沽合约', typeHint: 'P', dirLabel: '卖出', dirClass: 'sell', badgeClass: 'put' },
-      { label: '腿二：买入认沽（低行权价）', subtitle: '买入较低行权价的认沽合约', typeHint: 'P', dirLabel: '买入', dirClass: 'buy', badgeClass: 'put' }
+      {
+        label: '腿一：卖出认沽（高行权价）', subtitle: '卖出较高行权价的认沽合约',
+        typeHint: 'P', dirLabel: '卖出', dirClass: 'sell', badgeClass: 'put',
+        constraint: null, constraintHint: null
+      },
+      {
+        label: '腿二：买入认沽（低行权价）', subtitle: '买入行权价必须低于腿一',
+        typeHint: 'P', dirLabel: '买入', dirClass: 'buy', badgeClass: 'put',
+        constraint: (legResults, opt) => {
+          const leg0 = legResults[0];
+          if (!leg0) return true;
+          return opt.exerciseDate === leg0.exerciseDate &&
+                 parseFloat(opt.strikePrice) < parseFloat(leg0.strikePrice);
+        },
+        constraintHint: '⚠️ 腿二行权价必须低于腿一，且到期日相同'
+      }
     ]
   },
   {
@@ -668,8 +855,22 @@ const STRATEGIES = [
     emoji: '🐻',
     desc: '买高行权价认沽 + 卖低行权价认沽',
     legs: [
-      { label: '腿一：买入认沽（高行权价）', subtitle: '买入较高行权价的认沽合约', typeHint: 'P', dirLabel: '买入', dirClass: 'buy', badgeClass: 'put' },
-      { label: '腿二：卖出认沽（低行权价）', subtitle: '卖出较低行权价的认沽合约', typeHint: 'P', dirLabel: '卖出', dirClass: 'sell', badgeClass: 'put' }
+      {
+        label: '腿一：买入认沽（高行权价）', subtitle: '买入较高行权价的认沽合约',
+        typeHint: 'P', dirLabel: '买入', dirClass: 'buy', badgeClass: 'put',
+        constraint: null, constraintHint: null
+      },
+      {
+        label: '腿二：卖出认沽（低行权价）', subtitle: '卖出行权价必须低于腿一',
+        typeHint: 'P', dirLabel: '卖出', dirClass: 'sell', badgeClass: 'put',
+        constraint: (legResults, opt) => {
+          const leg0 = legResults[0];
+          if (!leg0) return true;
+          return opt.exerciseDate === leg0.exerciseDate &&
+                 parseFloat(opt.strikePrice) < parseFloat(leg0.strikePrice);
+        },
+        constraintHint: '⚠️ 腿二行权价必须低于腿一，且到期日相同'
+      }
     ]
   },
   {
@@ -678,8 +879,23 @@ const STRATEGIES = [
     emoji: '⚖️',
     desc: '卖出相同行权价的认购 + 认沽（同到期日）',
     legs: [
-      { label: '腿一：卖出认购', subtitle: '卖出认购合约（与腿二同行权价）', typeHint: 'C', dirLabel: '卖出', dirClass: 'sell', badgeClass: 'call' },
-      { label: '腿二：卖出认沽', subtitle: '卖出认沽合约（与腿一同行权价）', typeHint: 'P', dirLabel: '卖出', dirClass: 'sell', badgeClass: 'put' }
+      {
+        label: '腿一：卖出认购', subtitle: '卖出认购合约（与腿二同行权价）',
+        typeHint: 'C', dirLabel: '卖出', dirClass: 'sell', badgeClass: 'call',
+        constraint: null, constraintHint: null
+      },
+      {
+        label: '腿二：卖出认沽', subtitle: '行权价与到期日必须与腿一完全相同',
+        typeHint: 'P', dirLabel: '卖出', dirClass: 'sell', badgeClass: 'put',
+        // 跨式：行权价相同 + 到期日相同
+        constraint: (legResults, opt) => {
+          const leg0 = legResults[0];
+          if (!leg0) return true;
+          return opt.exerciseDate === leg0.exerciseDate &&
+                 opt.strikePrice === leg0.strikePrice;
+        },
+        constraintHint: '⚠️ 腿二必须与腿一行权价相同、到期日相同'
+      }
     ]
   },
   {
@@ -688,8 +904,23 @@ const STRATEGIES = [
     emoji: '🦅',
     desc: '卖出不同行权价的认购 + 认沽（同到期日）',
     legs: [
-      { label: '腿一：卖出认购（较高行权价）', subtitle: '卖出较高行权价的认购合约', typeHint: 'C', dirLabel: '卖出', dirClass: 'sell', badgeClass: 'call' },
-      { label: '腿二：卖出认沽（较低行权价）', subtitle: '卖出较低行权价的认沽合约', typeHint: 'P', dirLabel: '卖出', dirClass: 'sell', badgeClass: 'put' }
+      {
+        label: '腿一：卖出认购（较高行权价）', subtitle: '卖出较高行权价的认购合约',
+        typeHint: 'C', dirLabel: '卖出', dirClass: 'sell', badgeClass: 'call',
+        constraint: null, constraintHint: null
+      },
+      {
+        label: '腿二：卖出认沽（较低行权价）', subtitle: '到期日必须与腿一相同，行权价不同',
+        typeHint: 'P', dirLabel: '卖出', dirClass: 'sell', badgeClass: 'put',
+        // 宽跨式：到期日相同，行权价不同（认沽行权价通常低于认购，但不强制，只要不同即可）
+        constraint: (legResults, opt) => {
+          const leg0 = legResults[0];
+          if (!leg0) return true;
+          return opt.exerciseDate === leg0.exerciseDate &&
+                 opt.strikePrice !== leg0.strikePrice;
+        },
+        constraintHint: '⚠️ 腿二到期日必须与腿一相同，且行权价不同'
+      }
     ]
   },
   {
@@ -698,8 +929,24 @@ const STRATEGIES = [
     emoji: '📅',
     desc: '卖出近月合约 + 买入远月合约（同行权价）',
     legs: [
-      { label: '腿一：卖出近月合约', subtitle: '卖出到期日较近的合约', typeHint: null, dirLabel: '卖出', dirClass: 'sell', badgeClass: 'sell' },
-      { label: '腿二：买入远月合约', subtitle: '买入到期日较远的合约', typeHint: null, dirLabel: '买入', dirClass: 'buy', badgeClass: 'buy' }
+      {
+        label: '腿一：卖出近月合约', subtitle: '卖出到期日较近的合约',
+        typeHint: null, dirLabel: '卖出', dirClass: 'sell', badgeClass: 'sell',
+        constraint: null, constraintHint: null
+      },
+      {
+        label: '腿二：买入远月合约', subtitle: '到期日必须晚于腿一，行权价相同',
+        typeHint: null, dirLabel: '买入', dirClass: 'buy', badgeClass: 'buy',
+        // 日历价差：到期日必须晚于腿一，行权价相同，期权类型相同
+        constraint: (legResults, opt) => {
+          const leg0 = legResults[0];
+          if (!leg0) return true;
+          return opt.exerciseDate > leg0.exerciseDate &&
+                 opt.strikePrice === leg0.strikePrice &&
+                 opt.type === leg0.type;
+        },
+        constraintHint: '⚠️ 腿二到期日必须晚于腿一，且行权价、期权类型相同'
+      }
     ]
   },
   {
@@ -708,7 +955,11 @@ const STRATEGIES = [
     emoji: '💰',
     desc: '单独卖出认沽期权，收取权利金',
     legs: [
-      { label: '腿一：卖出认沽', subtitle: '选择卖出的认沽合约', typeHint: 'P', dirLabel: '卖出', dirClass: 'sell', badgeClass: 'put' }
+      {
+        label: '腿一：卖出认沽', subtitle: '选择卖出的认沽合约',
+        typeHint: 'P', dirLabel: '卖出', dirClass: 'sell', badgeClass: 'put',
+        constraint: null, constraintHint: null
+      }
     ]
   }
 ];
@@ -716,17 +967,15 @@ const STRATEGIES = [
 // ============================================================
 //  ② 全局状态
 // ============================================================
-let allOptions   = [];   // 解析后的扁平期权数组
-let selectedEtf  = '';   // 当前选中的 ETF
-let selectedStrategy = null;  // 当前选中的策略对象
-// legResults[i] = 已选定的期权对象，或 null（未完成）
+let allOptions   = [];
+let selectedEtf  = '';
+let selectedStrategy = null;
 let legResults   = [];
 
 // ============================================================
 //  ③ 工具函数
 // ============================================================
 
-/** CSV 字符串 → 期权对象 */
 function parseOption(csv) {
   const p = csv.split(',');
   return {
@@ -741,25 +990,26 @@ function parseOption(csv) {
   };
 }
 
-/** YYYYMMDD → YYYY-MM-DD */
 function fmtDate(d) {
   if (!d || d.length !== 8) return d;
   return `${d.slice(0,4)}-${d.slice(4,6)}-${d.slice(6,8)}`;
 }
 
-/** 填充 <select> */
 function fillSelect(sel, items, placeholder) {
   sel.innerHTML = `<option value="">${placeholder}</option>`;
-  items.forEach(({ value, label }) => {
+  items.forEach(({ value, label, disabled }) => {
     const o = document.createElement('option');
     o.value = value;
     o.textContent = label;
+    if (disabled) {
+      o.disabled = true;
+      o.style.color = '#ccc';
+    }
     sel.appendChild(o);
   });
   sel.disabled = false;
 }
 
-/** 重置 <select> */
 function resetSelect(sel, placeholder) {
   sel.innerHTML = `<option value="">${placeholder}</option>`;
   sel.disabled = true;
@@ -778,17 +1028,14 @@ async function loadData() {
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     const raw = await resp.json();
 
-    // 扁平化解析
     allOptions = [];
     Object.values(raw).forEach(arr => arr.forEach(csv => allOptions.push(parseOption(csv))));
 
-    // 统计
     const etfCount = Object.keys(raw).length;
     document.getElementById('statEtf').textContent    = etfCount;
     document.getElementById('statOption').textContent = allOptions.length;
     document.getElementById('statsBar').classList.add('show');
 
-    // 填充 ETF 下拉
     const etfList = [...new Set(allOptions.map(o => o.etfCode))].sort()
       .map(c => ({ value: c, label: c }));
     fillSelect(selEtf, etfList, '-- 请选择 ETF --');
@@ -811,23 +1058,22 @@ document.getElementById('selEtf').addEventListener('change', function () {
     document.getElementById('cardStep2').style.display = 'none';
     hideLegs();
     hideResult();
+    hideSummary();
     return;
   }
-  // 显示策略选择区
   renderStrategyGrid();
   document.getElementById('cardStep2').style.display = 'block';
   document.getElementById('cardStep2').scrollIntoView({ behavior: 'smooth', block: 'start' });
-  // 重置后续
   selectedStrategy = null;
   hideLegs();
   hideResult();
+  hideSummary();
 });
 
 // ============================================================
 //  ⑥ STEP 2 → 策略选择
 // ============================================================
 
-/** 渲染策略按钮网格 */
 function renderStrategyGrid() {
   const grid = document.getElementById('strategyGrid');
   grid.innerHTML = '';
@@ -846,9 +1092,7 @@ function renderStrategyGrid() {
   });
 }
 
-/** 策略按钮点击 */
 function onStrategySelect(strategy, btnEl) {
-  // 高亮选中按钮
   document.querySelectorAll('.strategy-btn').forEach(b => b.classList.remove('selected'));
   btnEl.classList.add('selected');
 
@@ -857,16 +1101,13 @@ function onStrategySelect(strategy, btnEl) {
 
   renderLegs(strategy);
   hideResult();
+  hideSummary();
 }
 
 // ============================================================
-//  ⑦ STEP 3+4 → 动态渲染期权腿
+//  ⑦ STEP 3+4 → 动态渲染期权腿（含约束过滤）
 // ============================================================
 
-/**
- * 根据策略渲染腿选择区
- * 核心逻辑：legs.length === 1 → 单腿；否则 → 双腿
- */
 function renderLegs(strategy) {
   const wrapper     = document.getElementById('legsWrapper');
   const grid        = document.getElementById('legsGrid');
@@ -876,13 +1117,11 @@ function renderLegs(strategy) {
 
   titleEl.textContent = `${strategy.emoji} ${strategy.name} — 筛选期权合约`;
 
-  // 策略说明
   infoBar.innerHTML = `
     <strong>${strategy.emoji} ${strategy.name}</strong>：${strategy.desc}。
     共需选择 <strong>${strategy.legs.length}</strong> 条腿，请依次完成每条腿的合约筛选。
   `;
 
-  // 渲染腿内进度步骤
   progressEl.innerHTML = strategy.legs.map((leg, i) => `
     <div class="step-item ${i === 0 ? 'active' : ''}" id="legStep${i}">
       <div class="step-dot">${i + 1}</div>
@@ -890,7 +1129,6 @@ function renderLegs(strategy) {
     </div>
   `).join('');
 
-  // 渲染腿卡片
   grid.innerHTML = '';
   strategy.legs.forEach((leg, legIdx) => {
     const card = document.createElement('div');
@@ -913,6 +1151,7 @@ function renderLegs(strategy) {
           <select class="form-select" id="leg${legIdx}_date" disabled>
             <option value="">-- 请选择行权日期 --</option>
           </select>
+          <div class="constraint-hint" id="leg${legIdx}_date_hint"></div>
         </div>
         <!-- 期权类型（仅 typeHint===null 时显示） -->
         ${leg.typeHint === null ? `
@@ -921,6 +1160,7 @@ function renderLegs(strategy) {
           <select class="form-select" id="leg${legIdx}_type" disabled>
             <option value="">-- 请先选择日期 --</option>
           </select>
+          <div class="constraint-hint" id="leg${legIdx}_type_hint"></div>
         </div>` : ''}
         <!-- 行权价格 -->
         <div class="form-group">
@@ -928,12 +1168,12 @@ function renderLegs(strategy) {
           <select class="form-select" id="leg${legIdx}_strike" disabled>
             <option value="">-- 请先选择日期 --</option>
           </select>
+          <div class="constraint-hint" id="leg${legIdx}_strike_hint"></div>
         </div>
       </div>
     `;
     grid.appendChild(card);
 
-    // 初始化该腿的日期下拉
     initLegDateSelect(legIdx, leg);
   });
 
@@ -943,20 +1183,35 @@ function renderLegs(strategy) {
 
 /**
  * 初始化腿的日期下拉
- * @param {number} legIdx - 腿索引
- * @param {object} leg    - 腿配置
+ * ★ 修改点：对有约束的腿，过滤日期选项（只显示满足约束的日期）
  */
 function initLegDateSelect(legIdx, leg) {
   const selDate = document.getElementById(`leg${legIdx}_date`);
 
-  // 根据 typeHint 过滤期权池
   let pool = allOptions.filter(o => o.etfCode === selectedEtf);
   if (leg.typeHint) pool = pool.filter(o => o.type === leg.typeHint);
 
-  const dates = [...new Set(pool.map(o => o.exerciseDate))].sort();
-  fillSelect(selDate, dates.map(d => ({ value: d, label: fmtDate(d) })), '-- 请选择行权日期 --');
+  // ★ 约束过滤：若该腿有约束函数，对日期级别进行预过滤
+  //   只保留"该日期下至少存在一个满足约束的期权"的日期
+  let dateItems;
+  if (leg.constraint && legResults[legIdx - 1]) {
+    const allDates = [...new Set(pool.map(o => o.exerciseDate))].sort();
+    dateItems = allDates.map(d => {
+      const hasValid = pool.filter(o => o.exerciseDate === d)
+                           .some(o => leg.constraint(legResults, o));
+      return { value: d, label: fmtDate(d), disabled: !hasValid };
+    });
+    // 显示约束提示
+    if (leg.constraintHint) {
+      const hint = document.getElementById(`leg${legIdx}_date_hint`);
+      if (hint) { hint.textContent = leg.constraintHint; hint.classList.add('show'); }
+    }
+  } else {
+    const dates = [...new Set(pool.map(o => o.exerciseDate))].sort();
+    dateItems = dates.map(d => ({ value: d, label: fmtDate(d) }));
+  }
 
-  // 监听日期变化
+  fillSelect(selDate, dateItems, '-- 请选择行权日期 --');
   selDate.addEventListener('change', () => onLegDateChange(legIdx, leg));
 }
 
@@ -975,18 +1230,39 @@ function onLegDateChange(legIdx, leg) {
   if (leg.typeHint) pool = pool.filter(o => o.type === leg.typeHint);
 
   if (leg.typeHint === null) {
-    // 需要显示类型选择
     const selType   = document.getElementById(`leg${legIdx}_type`);
     const selStrike = document.getElementById(`leg${legIdx}_strike`);
-    const types = [...new Set(pool.map(o => o.type))].sort();
-    fillSelect(selType, types.map(t => ({
-      value: t,
-      label: t === 'C' ? '📈 认购（Call）' : '📉 认沽（Put）'
-    })), '-- 请选择期权类型 --');
+
+    // ★ 约束过滤：类型级别
+    let typeItems;
+    if (leg.constraint && legResults[legIdx - 1]) {
+      const allTypes = [...new Set(pool.map(o => o.type))].sort();
+      typeItems = allTypes.map(t => {
+        const hasValid = pool.filter(o => o.type === t)
+                             .some(o => leg.constraint(legResults, o));
+        return {
+          value: t,
+          label: t === 'C' ? '📈 认购（Call）' : '📉 认沽（Put）',
+          disabled: !hasValid
+        };
+      });
+      // 显示约束提示
+      if (leg.constraintHint) {
+        const hint = document.getElementById(`leg${legIdx}_type_hint`);
+        if (hint) { hint.textContent = leg.constraintHint; hint.classList.add('show'); }
+      }
+    } else {
+      const types = [...new Set(pool.map(o => o.type))].sort();
+      typeItems = types.map(t => ({
+        value: t,
+        label: t === 'C' ? '📈 认购（Call）' : '📉 认沽（Put）'
+      }));
+    }
+
+    fillSelect(selType, typeItems, '-- 请选择期权类型 --');
     resetSelect(selStrike, '-- 请先选择期权类型 --');
     selType.addEventListener('change', () => onLegTypeChange(legIdx, leg), { once: true });
   } else {
-    // 直接填充行权价
     fillLegStrike(legIdx, leg, pool);
   }
 }
@@ -1009,23 +1285,51 @@ function onLegTypeChange(legIdx, leg) {
   );
   fillLegStrike(legIdx, leg, pool);
 
-  // 重新监听类型变化（因为用了 once:true，需要重新绑定）
   const selType = document.getElementById(`leg${legIdx}_type`);
   selType.addEventListener('change', () => onLegTypeChange(legIdx, leg), { once: true });
 }
 
 /**
  * 填充腿的行权价下拉
+ * ★ 修改点：对有约束的腿，过滤/禁用不满足约束的行权价
  */
 function fillLegStrike(legIdx, leg, pool) {
   const selStrike = document.getElementById(`leg${legIdx}_strike`);
   const strikes = [...new Set(pool.map(o => o.strikePrice))]
     .sort((a, b) => parseFloat(a) - parseFloat(b));
-  fillSelect(selStrike, strikes.map(s => ({ value: s, label: `¥ ${s}` })), '-- 请选择行权价格 --');
 
-  // 移除旧监听，重新绑定
-  const newSel = selStrike.cloneNode(true);
+  // ★ 约束过滤：行权价级别
+  let strikeItems;
+  if (leg.constraint && legResults[legIdx - 1]) {
+    strikeItems = strikes.map(s => {
+      // 找到该行权价对应的任意一个期权，检查约束
+      const sampleOpt = pool.find(o => o.strikePrice === s);
+      const valid = sampleOpt ? leg.constraint(legResults, sampleOpt) : false;
+      return { value: s, label: `¥ ${s}`, disabled: !valid };
+    });
+    // 显示约束提示
+    if (leg.constraintHint) {
+      const hint = document.getElementById(`leg${legIdx}_strike_hint`);
+      if (hint) { hint.textContent = leg.constraintHint; hint.classList.add('show'); }
+    }
+  } else {
+    strikeItems = strikes.map(s => ({ value: s, label: `¥ ${s}` }));
+  }
+
+  const newSel = selStrike.cloneNode(false); // 克隆不含子节点的 select
   selStrike.parentNode.replaceChild(newSel, selStrike);
+
+  // 手动填充（支持 disabled option）
+  newSel.innerHTML = `<option value="">-- 请选择行权价格 --</option>`;
+  strikeItems.forEach(({ value, label, disabled }) => {
+    const o = document.createElement('option');
+    o.value = value;
+    o.textContent = label;
+    if (disabled) { o.disabled = true; o.style.color = '#ccc'; }
+    newSel.appendChild(o);
+  });
+  newSel.disabled = false;
+
   newSel.addEventListener('change', () => onLegStrikeChange(legIdx, leg, pool));
 }
 
@@ -1033,14 +1337,9 @@ function fillLegStrike(legIdx, leg, pool) {
  * 腿行权价变化 → 精确匹配期权
  */
 function onLegStrikeChange(legIdx, leg, pool) {
-  const strikeVal = document.getElementById(`leg${legIdx}_strike`)?.value
-    || document.querySelector(`#legCard${legIdx} select:last-of-type`)?.value;
-
-  // 重新获取最新的 strike select
-  const selStrike = document.getElementById(`leg${legIdx}_strike`)
-    || document.querySelector(`#legCard${legIdx} .leg-selects select:last-child`);
-
+  const selStrike = document.getElementById(`leg${legIdx}_strike`);
   const strike = selStrike ? selStrike.value : '';
+
   if (!strike) {
     legResults[legIdx] = null;
     updateLegDoneMark(legIdx, false);
@@ -1048,14 +1347,76 @@ function onLegStrikeChange(legIdx, leg, pool) {
     return;
   }
 
-  // 从 pool 中精确匹配（pool 已按日期+类型过滤）
   const matched = pool.filter(o => o.strikePrice === strike);
   if (matched.length === 0) return;
 
   legResults[legIdx] = matched[0];
   updateLegDoneMark(legIdx, true);
   updateLegProgress(legIdx);
+
+  // ★ 腿一完成后，重新刷新腿二的可选项（应用约束）
+  if (legIdx === 0 && selectedStrategy && selectedStrategy.legs.length > 1) {
+    refreshSubsequentLegs(1);
+  }
+
   checkAllLegsComplete();
+}
+
+/**
+ * ★ 新增：当腿一完成后，刷新后续腿的下拉选项以应用约束
+ */
+function refreshSubsequentLegs(fromLegIdx) {
+  for (let i = fromLegIdx; i < selectedStrategy.legs.length; i++) {
+    const leg = selectedStrategy.legs[i];
+    if (!leg.constraint) continue;
+
+    // 重置该腿的结果
+    legResults[i] = null;
+    updateLegDoneMark(i, false);
+
+    // 重新初始化日期下拉
+    const selDate = document.getElementById(`leg${i}_date`);
+    if (selDate) {
+      // 清除旧监听（通过克隆替换）
+      const newDate = selDate.cloneNode(false);
+      selDate.parentNode.replaceChild(newDate, selDate);
+
+      let pool = allOptions.filter(o => o.etfCode === selectedEtf);
+      if (leg.typeHint) pool = pool.filter(o => o.type === leg.typeHint);
+
+      const allDates = [...new Set(pool.map(o => o.exerciseDate))].sort();
+      const dateItems = allDates.map(d => {
+        const hasValid = pool.filter(o => o.exerciseDate === d)
+                             .some(o => leg.constraint(legResults, o));
+        return { value: d, label: fmtDate(d), disabled: !hasValid };
+      });
+
+      newDate.innerHTML = `<option value="">-- 请选择行权日期 --</option>`;
+      dateItems.forEach(({ value, label, disabled }) => {
+        const o = document.createElement('option');
+        o.value = value;
+        o.textContent = label;
+        if (disabled) { o.disabled = true; o.style.color = '#ccc'; }
+        newDate.appendChild(o);
+      });
+      newDate.disabled = false;
+      newDate.addEventListener('change', () => onLegDateChange(i, leg));
+
+      // 显示约束提示
+      if (leg.constraintHint) {
+        const hint = document.getElementById(`leg${i}_date_hint`);
+        if (hint) { hint.textContent = leg.constraintHint; hint.classList.add('show'); }
+      }
+    }
+
+    // 重置行权价
+    const selStrike = document.getElementById(`leg${i}_strike`);
+    if (selStrike) resetSelect(selStrike, '-- 请先选择日期 --');
+
+    // 重置类型（若存在）
+    const selType = document.getElementById(`leg${i}_type`);
+    if (selType) resetSelect(selType, '-- 请先选择日期 --');
+  }
 }
 
 /**
@@ -1090,8 +1451,10 @@ function checkAllLegsComplete() {
   const allDone = legResults.every(r => r !== null);
   if (allDone && selectedStrategy) {
     renderResult();
+    renderSummary();
   } else {
     hideResult();
+    hideSummary();
   }
 }
 
@@ -1099,10 +1462,6 @@ function checkAllLegsComplete() {
 //  ⑧ STEP 5 → 渲染结果
 // ============================================================
 
-/**
- * 渲染策略组合结果面板
- * UI 强制要求：期权代码 加粗 + 标红（通过 .is-code 类实现）
- */
 function renderResult() {
   const section  = document.getElementById('resultSection');
   const nameEl   = document.getElementById('resultStrategyName');
@@ -1114,15 +1473,12 @@ function renderResult() {
 
   gridEl.innerHTML = '';
 
-  // 逐腿渲染结果卡片
   legResults.forEach((opt, idx) => {
     const legCfg  = selectedStrategy.legs[idx];
     const isCall  = opt.type === 'C';
     const headCls = legCfg.dirClass === 'buy' ? 'buy-head' : 'sell-head';
 
-    // 构建信息行（8 个字段）
     const fields = [
-      // ★ 期权代码：强制加粗 + 标红，使用 is-code 类 ★
       { key: '期权代码', val: opt.optionCode,                        cls: 'is-code' },
       { key: '合约名称', val: opt.contractName,                      cls: '' },
       { key: '期权类型', val: isCall ? '认购（Call）' : '认沽（Put）', cls: '' },
@@ -1158,7 +1514,82 @@ function renderResult() {
 }
 
 // ============================================================
-//  ⑨ 辅助：隐藏 & 重置
+//  ⑨ STEP 6 → 渲染最终选择概要
+// ============================================================
+
+/**
+ * 构建概要行数据
+ * 备兑开仓比较特殊：腿零是持有 ETF（现货），腿一是卖出期权
+ * 其余策略：每条腿均为期权合约
+ */
+function buildSummaryRows() {
+  const rows = [];
+
+  // 备兑开仓：额外插入一条"持有 ETF"行
+  if (selectedStrategy.id === 'covered_call') {
+    rows.push({
+      dir: 'hold',
+      dirLabel: '持有',
+      code: selectedEtf,
+      isEtf: true,
+      detail: `ETF 现货（每张合约对应 ${legResults[0].contractUnit} 份）`,
+      legLabel: '底仓'
+    });
+  }
+
+  legResults.forEach((opt, idx) => {
+    const legCfg = selectedStrategy.legs[idx];
+    rows.push({
+      dir: legCfg.dirClass,           // 'buy' | 'sell'
+      dirLabel: legCfg.dirLabel,       // '买入' | '卖出'
+      code: opt.optionCode,            // 期权合约代码
+      isEtf: false,
+      detail: `${opt.contractName} · 行权价 ¥${opt.strikePrice} · 到期 ${fmtDate(opt.exerciseDate)}`,
+      legLabel: `腿 ${idx + 1}`
+    });
+  });
+
+  return rows;
+}
+
+function renderSummary() {
+  const section    = document.getElementById('summarySection');
+  const nameEl     = document.getElementById('summaryStrategyName');
+  const rowsEl     = document.getElementById('summaryRows');
+  const etfCodeEl  = document.getElementById('summaryEtfCode');
+
+  nameEl.textContent  = `${selectedStrategy.emoji} ${selectedStrategy.name}`;
+  etfCodeEl.textContent = selectedEtf;
+
+  const rows = buildSummaryRows();
+  rowsEl.innerHTML = '';
+
+  rows.forEach(row => {
+    const dirClass = row.dir === 'buy'  ? 'buy-dir'
+                   : row.dir === 'sell' ? 'sell-dir'
+                   :                      'hold-dir';
+    const div = document.createElement('div');
+    div.className = 'summary-row';
+    div.innerHTML = `
+      <div class="summary-row-dir ${dirClass}">${row.dirLabel}</div>
+      <div class="summary-row-body">
+        <div class="summary-row-code ${row.isEtf ? 'is-etf' : ''}">${row.code}</div>
+        <div class="summary-row-detail">${row.detail}</div>
+      </div>
+      <div class="summary-row-leg-label">${row.legLabel}</div>
+    `;
+    rowsEl.appendChild(div);
+  });
+
+  section.classList.add('show');
+  // 滚动到概要区域
+  setTimeout(() => {
+    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 300);
+}
+
+// ============================================================
+//  ⑩ 辅助：隐藏 & 重置
 // ============================================================
 
 function hideLegs() {
@@ -1168,6 +1599,10 @@ function hideLegs() {
 
 function hideResult() {
   document.getElementById('resultSection').classList.remove('show');
+}
+
+function hideSummary() {
+  document.getElementById('summarySection').classList.remove('show');
 }
 
 /** 全局重置 */
@@ -1181,11 +1616,12 @@ function resetAll() {
   document.querySelectorAll('.strategy-btn').forEach(b => b.classList.remove('selected'));
   hideLegs();
   hideResult();
+  hideSummary();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // ============================================================
-//  ⑩ 启动
+//  ⑪ 启动
 // ============================================================
 loadData();
 </script>
