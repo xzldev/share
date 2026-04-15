@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ETF 期权筛选器</title>
+  <style>
+    /* ===== 全局重置 & 变量 ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --primary: #1677ff;
+      --primary-light: #e6f0ff;
+      --success: #52c41a;
+      --warning: #faad14;
+      --danger: #ff4d4f;
+      --bg: #f0f2f5;
+      --card: #ffffff;
+      --border: #d9d9d9;
+      --text: #1a1a2e;
+      --text-secondary: #666;
+      --radius: 12px;
+      --shadow: 0 4px 20px rgba(0,0,0,0.08);
+      --transition: all 0.25s ease;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 24px 16px 60px;
+    }
+
+    /* ===== 页面头部 ===== */
+    .page-header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .page-header h1 {
+      font-size: 28px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #1677ff, #0050d0);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 8px;
+    }
+    .page-header p {
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+
+    /* ===== 主容器 ===== */
+    .container { max-width: 860px; margin: 0 auto; }
+
+    /* ===== 卡片 ===== */
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 28px 32px;
+      margin-bottom: 24px;
+    }
+    .card-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid var(--primary-light);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card-title .icon {
+      width: 24px; height: 24px;
+      background: var(--primary);
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 13px;
+    }
+
+    /* ===== 筛选表单 ===== */
+    .filter-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 20px;
+    }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-label {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .step-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px; height: 18px;
+      background: var(--primary);
+      color: #fff;
+      border-radius: 50%;
+      font-size: 11px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .form-select {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-size: 14px;
+      color: var(--text);
+      background: #fff;
+      cursor: pointer;
+      transition: var(--transition);
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23999' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 32px;
+    }
+    .form-select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(22,119,255,0.12);
+    }
+    .form-select:disabled {
+      background-color: #f5f5f5;
+      color: #bbb;
+      cursor: not-allowed;
+    }
+
+    /* ===== 加载状态 ===== */
+    .loading-bar {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      background: var(--primary-light);
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-size: 13px;
+      color: var(--primary);
+    }
+    .loading-bar.show { display: flex; }
+    .spinner {
+      width: 16px; height: 16px;
+      border: 2px solid var(--primary-light);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ===== 错误提示 ===== */
+    .error-tip {
+      display: none;
+      padding: 12px 16px;
+      background: #fff2f0;
+      border: 1px solid #ffccc7;
+      border-radius: 8px;
+      color: var(--danger);
+      font-size: 13px;
+      margin-bottom: 20px;
+    }
+    .error-tip.show { display: block; }
+
+    /* ===== 进度指示器 ===== */
+    .progress-steps {
+      display: flex;
+      align-items: center;
+      margin-bottom: 24px;
+      gap: 0;
+    }
+    .step-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex: 1;
+      position: relative;
+    }
+    .step-item::after {
+      content: '';
+      position: absolute;
+      top: 14px;
+      left: 50%;
+      width: 100%;
+      height: 2px;
+      background: var(--border);
+      z-index: 0;
+      transition: var(--transition);
+    }
+    .step-item:last-child::after { display: none; }
+    .step-item.active::after { background: var(--primary); }
+    .step-dot {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: #fff;
+      border: 2px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700;
+      color: var(--text-secondary);
+      z-index: 1;
+      transition: var(--transition);
+      position: relative;
+    }
+    .step-item.active .step-dot {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+    }
+    .step-item.done .step-dot {
+      background: var(--success);
+      border-color: var(--success);
+      color: #fff;
+    }
+    .step-label {
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+      text-align: center;
+      white-space: nowrap;
+    }
+    .step-item.active .step-label { color: var(--primary); font-weight: 600; }
+    .step-item.done .step-label { color: var(--success); }
+
+    /* ===== 结果区域 ===== */
+    .result-section { display: none; }
+    .result-section.show { display: block; }
+
+    .result-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .result-name {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .badge-call { background: #fff7e6; color: #d46b08; border: 1px solid #ffd591; }
+    .badge-put  { background: #fff1f0; color: #cf1322; border: 1px solid #ffa39e; }
+
+    /* ===== 信息网格 ===== */
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+    }
+    .info-item {
+      background: var(--bg);
+      border-radius: 10px;
+      padding: 16px;
+      border-left: 3px solid var(--primary);
+      transition: var(--transition);
+    }
+    .info-item:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+    .info-item.highlight-call { border-left-color: var(--warning); }
+    .info-item.highlight-put  { border-left-color: var(--danger); }
+    .info-key {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+    .info-value {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .info-value.price { color: var(--primary); }
+    .info-value.date  { font-size: 15px; }
+    .info-value.code  { font-size: 13px; font-family: 'Courier New', monospace; color: #555; }
+
+    /* ===== 重置按钮 ===== */
+    .btn-reset {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 20px;
+      background: #fff;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .btn-reset:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+      background: var(--primary-light);
+    }
+
+    /* ===== 数据统计 ===== */
+    .stats-bar {
+      display: flex;
+      gap: 20px;
+      padding: 12px 16px;
+      background: var(--primary-light);
+      border-radius: 8px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .stat-item { font-size: 13px; color: var(--primary); }
+    .stat-item strong { font-weight: 700; }
+
+    /* ===== 响应式 ===== */
+    @media (max-width: 600px) {
+      .card { padding: 20px 16px; }
+      .page-header h1 { font-size: 22px; }
+      .filter-grid { grid-template-columns: 1fr 1fr; }
+      .progress-steps { gap: 0; }
+      .step-label { font-size: 10px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- 页头 -->
+  <div class="page-header">
+    <h1>📊 ETF 期权筛选器</h1>
+    <p>实时读取期权数据 · 四级联动筛选 · 快速定位目标合约</p>
+  </div>
+
+  <!-- 筛选卡片 -->
+  <div class="card">
+    <div class="card-title">
+      <div class="icon">🔍</div>
+      多级联动筛选
+    </div>
+
+    <!-- 加载提示 -->
+    <div class="loading-bar" id="loadingBar">
+      <div class="spinner"></div>
+      <span>正在加载期权数据，请稍候...</span>
+    </div>
+
+    <!-- 错误提示 -->
+    <div class="error-tip" id="errorTip"></div>
+
+    <!-- 进度步骤 -->
+    <div class="progress-steps" id="progressSteps">
+      <div class="step-item active" id="step1">
+        <div class="step-dot">1</div>
+        <div class="step-label">选 ETF</div>
+      </div>
+      <div class="step-item" id="step2">
+        <div class="step-dot">2</div>
+        <div class="step-label">行权时间</div>
+      </div>
+      <div class="step-item" id="step3">
+        <div class="step-dot">3</div>
+        <div class="step-label">期权类型</div>
+      </div>
+      <div class="step-item" id="step4">
+        <div class="step-dot">4</div>
+        <div class="step-label">行权价格</div>
+      </div>
+    </div>
+
+    <!-- 数据统计 -->
+    <div class="stats-bar" id="statsBar" style="display:none">
+      <div class="stat-item">共 <strong id="statEtf">-</strong> 个 ETF</div>
+      <div class="stat-item">共 <strong id="statOption">-</strong> 个期权合约</div>
+      <div class="stat-item" id="statFiltered" style="display:none">
+        当前筛选: <strong id="statFilteredNum">-</strong> 个合约
+      </div>
+    </div>
+
+    <!-- 四级下拉 -->
+    <div class="filter-grid">
+      <!-- 第一级：ETF -->
+      <div class="form-group">
+        <label class="form-label">
+          <span class="step-badge">1</span> ETF 代码
+        </label>
+        <select class="form-select" id="selEtf" disabled>
+          <option value="">-- 加载中 --</option>
+        </select>
+      </div>
+
+      <!-- 第二级：行权时间 -->
+      <div class="form-group">
+        <label class="form-label">
+          <span class="step-badge">2</span> 行权时间
+        </label>
+        <select class="form-select" id="selDate" disabled>
+          <option value="">-- 请先选择 ETF --</option>
+        </select>
+      </div>
+
+      <!-- 第三级：期权类型 -->
+      <div class="form-group">
+        <label class="form-label">
+          <span class="step-badge">3</span> 期权类型
+        </label>
+        <select class="form-select" id="selType" disabled>
+          <option value="">-- 请先选择行权时间 --</option>
+        </select>
+      </div>
+
+      <!-- 第四级：行权价格 -->
+      <div class="form-group">
+        <label class="form-label">
+          <span class="step-badge">4</span> 行权价格
+        </label>
+        <select class="form-select" id="selStrike" disabled>
+          <option value="">-- 请先选择期权类型 --</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- 结果展示卡片 -->
+  <div class="card result-section" id="resultSection">
+    <div class="result-header">
+      <div>
+        <div class="result-name" id="resultName">-</div>
+        <div style="margin-top:4px; font-size:13px; color:var(--text-secondary)" id="resultCode">-</div>
+      </div>
+      <div style="display:flex; gap:8px; align-items:center">
+        <span class="badge" id="typeBadge"></span>
+        <button class="btn-reset" onclick="resetAll()">↺ 重新筛选</button>
+      </div>
+    </div>
+
+    <div class="info-grid" id="infoGrid"></div>
+  </div>
+
+</div>
+
+<script>
+// ============================================================
+//  配置
+// ============================================================
+const JSON_URL = 'https://xzl-1300697369.cos-website.ap-shanghai.myqcloud.com/option/etfoptioncodes.json';
+
+// 字段索引映射（CSV 字段顺序）
+// 0: 期权代码, 1: 类型(C/P), 2: 行权日期(YYYYMMDD), 3: 合约单位
+// 4: 行权价格, 5: ETF代码, 6: 合约简码, 7: 合约名称
+const FIELD_MAP = [
+  { key: 'optionCode',    label: '期权代码',   icon: '🔑' },
+  { key: 'type',          label: '期权类型',   icon: '📌' },
+  { key: 'exerciseDate',  label: '行权日期',   icon: '📅' },
+  { key: 'contractUnit',  label: '合约单位',   icon: '📦' },
+  { key: 'strikePrice',   label: '行权价格',   icon: '💰' },
+  { key: 'etfCode',       label: 'ETF 代码',   icon: '📈' },
+  { key: 'contractShort', label: '合约简码',   icon: '🏷️' },
+  { key: 'contractName',  label: '合约名称',   icon: '📝' },
+];
+
+// ============================================================
+//  状态
+// ============================================================
+let rawData = {};       // 原始 JSON: { etfCode: [csvString, ...] }
+let allOptions = [];   // 解析后的扁平数组: [{optionCode, type, exerciseDate, ...}]
+
+// ============================================================
+//  工具函数
+// ============================================================
+
+/** 将 CSV 字符串解析为对象 */
+function parseOption(csvStr) {
+  const parts = csvStr.split(',');
+  return {
+    optionCode:    parts[0]?.trim() || '',
+    type:          parts[1]?.trim() || '',
+    exerciseDate:  parts[2]?.trim() || '',
+    contractUnit:  parts[3]?.trim() || '',
+    strikePrice:   parts[4]?.trim() || '',
+    etfCode:       parts[5]?.trim() || '',
+    contractShort: parts[6]?.trim() || '',
+    contractName:  parts[7]?.trim() || '',
+  };
+}
+
+/** YYYYMMDD → YYYY-MM-DD */
+function formatDate(d) {
+  if (!d || d.length !== 8) return d;
+  return `${d.slice(0,4)}-${d.slice(4,6)}-${d.slice(6,8)}`;
+}
+
+/** 填充 select 下拉框 */
+function fillSelect(sel, options, placeholder) {
+  sel.innerHTML = '';
+  const ph = document.createElement('option');
+  ph.value = '';
+  ph.textContent = placeholder;
+  sel.appendChild(ph);
+  options.forEach(({ value, label }) => {
+    const opt = document.createElement('option');
+    opt.value = value;
+    opt.textContent = label;
+    sel.appendChild(opt);
+  });
+  sel.disabled = false;
+}
+
+/** 禁用并重置 select */
+function resetSelect(sel, placeholder) {
+  sel.innerHTML = `<option value="">${placeholder}</option>`;
+  sel.disabled = true;
+}
+
+/** 更新进度步骤高亮 */
+function updateSteps(activeStep) {
+  for (let i = 1; i <= 4; i++) {
+    const el = document.getElementById(`step${i}`);
+    el.classList.remove('active', 'done');
+    if (i < activeStep) el.classList.add('done');
+    else if (i === activeStep) el.classList.add('active');
+  }
+}
+
+// ============================================================
+//  初始化：加载 JSON
+// ============================================================
+async function loadData() {
+  const loadingBar = document.getElementById('loadingBar');
+  const errorTip   = document.getElementById('errorTip');
+  const selEtf     = document.getElementById('selEtf');
+
+  loadingBar.classList.add('show');
+  errorTip.classList.remove('show');
+
+  try {
+    const resp = await fetch(JSON_URL);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    rawData = await resp.json();
+
+    // 扁平化解析所有期权
+    allOptions = [];
+    Object.values(rawData).forEach(arr => {
+      arr.forEach(csv => allOptions.push(parseOption(csv)));
+    });
+
+    // 统计信息
+    const etfCount = Object.keys(rawData).length;
+    document.getElementById('statEtf').textContent = etfCount;
+    document.getElementById('statOption').textContent = allOptions.length;
+    document.getElementById('statsBar').style.display = 'flex';
+
+    // 填充第一级：ETF 列表
+    const etfList = Object.keys(rawData).sort().map(code => ({ value: code, label: code }));
+    fillSelect(selEtf, etfList, '-- 请选择 ETF --');
+    updateSteps(1);
+
+  } catch (err) {
+    errorTip.textContent = `⚠️ 数据加载失败：${err.message}。请检查网络或刷新重试。`;
+    errorTip.classList.add('show');
+    selEtf.innerHTML = '<option value="">-- 加载失败 --</option>';
+  } finally {
+    loadingBar.classList.remove('show');
+  }
+}
+
+// ============================================================
+//  第一级变化：ETF 选定 → 填充行权时间
+// ============================================================
+document.getElementById('selEtf').addEventListener('change', function () {
+  const selDate   = document.getElementById('selDate');
+  const selType   = document.getElementById('selType');
+  const selStrike = document.getElementById('selStrike');
+  hideResult();
+
+  if (!this.value) {
+    resetSelect(selDate,   '-- 请先选择 ETF --');
+    resetSelect(selType,   '-- 请先选择行权时间 --');
+    resetSelect(selStrike, '-- 请先选择期权类型 --');
+    updateSteps(1);
+    return;
+  }
+
+  // 获取该 ETF 下所有期权，提取不重复行权日期并排序
+  const etfOptions = allOptions.filter(o => o.etfCode === this.value);
+  const dates = [...new Set(etfOptions.map(o => o.exerciseDate))].sort();
+  const dateItems = dates.map(d => ({ value: d, label: formatDate(d) }));
+
+  fillSelect(selDate, dateItems, '-- 请选择行权时间 --');
+  resetSelect(selType,   '-- 请先选择行权时间 --');
+  resetSelect(selStrike, '-- 请先选择期权类型 --');
+  updateSteps(2);
+
+  // 更新筛选统计
+  updateFilteredStat(etfOptions.length);
+});
+
+// ============================================================
+//  第二级变化：行权时间选定 → 填充期权类型
+// ============================================================
+document.getElementById('selDate').addEventListener('change', function () {
+  const selType   = document.getElementById('selType');
+  const selStrike = document.getElementById('selStrike');
+  const etfCode   = document.getElementById('selEtf').value;
+  hideResult();
+
+  if (!this.value) {
+    resetSelect(selType,   '-- 请先选择行权时间 --');
+    resetSelect(selStrike, '-- 请先选择期权类型 --');
+    updateSteps(2);
+    return;
+  }
+
+  // 检查该 ETF + 日期下实际存在哪些类型
+  const filtered = allOptions.filter(o => o.etfCode === etfCode && o.exerciseDate === this.value);
+  const types = [...new Set(filtered.map(o => o.type))].sort();
+  const typeItems = types.map(t => ({
+    value: t,
+    label: t === 'C' ? '📈 认购（Call）' : '📉 认沽（Put）'
+  }));
+
+  fillSelect(selType, typeItems, '-- 请选择期权类型 --');
+  resetSelect(selStrike, '-- 请先选择期权类型 --');
+  updateSteps(3);
+  updateFilteredStat(filtered.length);
+});
+
+// ============================================================
+//  第三级变化：期权类型选定 → 填充行权价格
+// ============================================================
+document.getElementById('selType').addEventListener('change', function () {
+  const selStrike = document.getElementById('selStrike');
+  const etfCode   = document.getElementById('selEtf').value;
+  const exDate    = document.getElementById('selDate').value;
+  hideResult();
+
+  if (!this.value) {
+    resetSelect(selStrike, '-- 请先选择期权类型 --');
+    updateSteps(3);
+    return;
+  }
+
+  const filtered = allOptions.filter(o =>
+    o.etfCode === etfCode &&
+    o.exerciseDate === exDate &&
+    o.type === this.value
+  );
+
+  // 行权价格去重排序（数值排序）
+  const strikes = [...new Set(filtered.map(o => o.strikePrice))]
+    .sort((a, b) => parseFloat(a) - parseFloat(b));
+  const strikeItems = strikes.map(s => ({ value: s, label: `¥ ${s}` }));
+
+  fillSelect(selStrike, strikeItems, '-- 请选择行权价格 --');
+  updateSteps(4);
+  updateFilteredStat(filtered.length);
+});
+
+// ============================================================
+//  第四级变化：行权价格选定 → 展示结果
+// ============================================================
+document.getElementById('selStrike').addEventListener('change', function () {
+  if (!this.value) { hideResult(); return; }
+
+  const etfCode  = document.getElementById('selEtf').value;
+  const exDate   = document.getElementById('selDate').value;
+  const optType  = document.getElementById('selType').value;
+  const strike   = this.value;
+
+  // 精确匹配唯一期权（同一行权价可能有多个合约单位，全部展示）
+  const matched = allOptions.filter(o =>
+    o.etfCode === etfCode &&
+    o.exerciseDate === exDate &&
+    o.type === optType &&
+    o.strikePrice === strike
+  );
+
+  if (matched.length === 0) { hideResult(); return; }
+
+  // 若匹配到多个（不同合约单位），展示第一个并提示
+  showResult(matched[0], matched.length > 1 ? matched : null);
+  updateSteps(5); // 全部完成
+});
+
+// ============================================================
+//  展示结果
+// ============================================================
+function showResult(option, allMatched) {
+  const section   = document.getElementById('resultSection');
+  const nameEl    = document.getElementById('resultName');
+  const codeEl    = document.getElementById('resultCode');
+  const badgeEl   = document.getElementById('typeBadge');
+  const gridEl    = document.getElementById('infoGrid');
+
+  nameEl.textContent = option.contractName || '未知合约';
+  codeEl.textContent = `合约代码：${option.optionCode}`;
+
+  const isCall = option.type === 'C';
+  badgeEl.textContent = isCall ? '📈 认购 Call' : '📉 认沽 Put';
+  badgeEl.className   = `badge ${isCall ? 'badge-call' : 'badge-put'}`;
+
+  // 构建信息卡片
+  const displayData = [
+    { label: '合约名称',   value: option.contractName,              cls: '' },
+    { label: '期权代码',   value: option.optionCode,                cls: 'code' },
+    { label: '期权类型',   value: isCall ? '认购（Call）' : '认沽（Put）', cls: isCall ? 'call' : 'put' },
+    { label: '行权日期',   value: formatDate(option.exerciseDate),  cls: 'date' },
+    { label: '行权价格',   value: `¥ ${option.strikePrice}`,        cls: 'price' },
+    { label: 'ETF 代码',  value: option.etfCode,                   cls: 'code' },
+    { label: '合约单位',   value: `${option.contractUnit} 份`,      cls: '' },
+    { label: '合约简码',   value: option.contractShort,             cls: 'code' },
+  ];
+
+  gridEl.innerHTML = displayData.map(item => `
+    <div class="info-item ${item.cls === 'call' ? 'highlight-call' : item.cls === 'put' ? 'highlight-put' : ''}">
+      <div class="info-key">${item.label}</div>
+      <div class="info-value ${item.cls !== 'call' && item.cls !== 'put' ? item.cls : ''}">${item.value}</div>
+    </div>
+  `).join('');
+
+  // 若有多个匹配合约（不同合约单位），追加提示
+  if (allMatched && allMatched.length > 1) {
+    const tip = document.createElement('div');
+    tip.style.cssText = 'margin-top:16px; padding:10px 14px; background:#fffbe6; border:1px solid #ffe58f; border-radius:8px; font-size:13px; color:#876800;';
+    tip.innerHTML = `⚠️ 该行权价格下共有 <strong>${allMatched.length}</strong> 个合约（合约单位不同），当前展示第一个。合约单位分别为：${allMatched.map(o => o.contractUnit).join('、')}`;
+    gridEl.appendChild(tip);
+  }
+
+  section.classList.add('show');
+  section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  updateFilteredStat(1);
+}
+
+function hideResult() {
+  document.getElementById('resultSection').classList.remove('show');
+}
+
+// ============================================================
+//  重置
+// ============================================================
+function resetAll() {
+  const selEtf    = document.getElementById('selEtf');
+  const selDate   = document.getElementById('selDate');
+  const selType   = document.getElementById('selType');
+  const selStrike = document.getElementById('selStrike');
+
+  selEtf.value = '';
+  resetSelect(selDate,   '-- 请先选择 ETF --');
+  resetSelect(selType,   '-- 请先选择行权时间 --');
+  resetSelect(selStrike, '-- 请先选择期权类型 --');
+  hideResult();
+  updateSteps(1);
+  document.getElementById('statFiltered').style.display = 'none';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ============================================================
+//  更新筛选统计
+// ============================================================
+function updateFilteredStat(num) {
+  const el = document.getElementById('statFiltered');
+  document.getElementById('statFilteredNum').textContent = num;
+  el.style.display = 'block';
+}
+
+// ============================================================
+//  启动
+// ============================================================
+loadData();
+</script>
+</body>
+</html>
