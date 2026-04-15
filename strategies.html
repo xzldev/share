@@ -1082,18 +1082,26 @@ async function loadData() {
   const errorTip   = document.getElementById('errorTip');
   const selEtf     = document.getElementById('selEtf');
 
+  // ★ 新增：环境检测日志
+  const isLocal = location.protocol === 'file:';
+  console.log('%c[ETF期权构建器] 环境检测', 'color:#1677ff;font-weight:bold;font-size:14px');
+  console.log(`  协议：${location.protocol}`);
+  console.log(`  运行模式：${isLocal ? '🖥️ 本地文件 (file://)' : '🌐 网络模式 (' + location.origin + ')'}`);
+  console.log(`  数据源 URL：${JSON_BASE_URL}`);
+
   try {
     // ★ 修改1：使用带时间戳的 URL + no-store 请求头，双重保障禁用缓存
     const url  = buildNoCacheUrl(JSON_BASE_URL);
     const resp = await fetch(url, {
-      cache: 'no-store',
-      headers: {
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache'
-      }
+      cache: 'no-store'   // 只保留这一行，不加自定义 headers
     });
+
+    console.log(`  HTTP 响应状态：${resp.status} ${resp.statusText}`);  // ★ 打印响应状态
+
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     const raw = await resp.json();
+
+    console.log(`  ✅ 数据加载成功，共 ${Object.keys(raw).length} 个 ETF`);  // ★ 成功日志
 
     allOptions = [];
     Object.values(raw).forEach(arr => arr.forEach(csv => allOptions.push(parseOption(csv))));
