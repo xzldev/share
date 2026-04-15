@@ -1091,12 +1091,22 @@ async function loadData() {
 
   try {
     // ★ 修改1：使用带时间戳的 URL + no-store 请求头，双重保障禁用缓存
-    const url  = buildNoCacheUrl(JSON_BASE_URL);
-    const resp = await fetch(url, {
-      cache: 'no-store'   // 只保留这一行，不加自定义 headers
-    });
+    const noCacheUrl  = buildNoCacheUrl(JSON_BASE_URL);
 
-    console.log(`  HTTP 响应状态：${resp.status} ${resp.statusText}`);  // ★ 打印响应状态
+    let resp;
+    if (isLocal) {
+      // 本地直接打开：普通 fetch，不加任何缓存控制（避免触发安全限制）
+      resp = await fetch(JSON_BASE_URL);
+    } else {
+      // 网络部署环境：双重禁缓存策略
+      resp = await fetch(noCacheUrl, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
+        }
+      });
+    }
 
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     const raw = await resp.json();
